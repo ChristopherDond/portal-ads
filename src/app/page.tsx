@@ -66,7 +66,7 @@ export default function HomePage() {
                           bg-zinc-900 border border-zinc-700 rounded-full">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
             <span className="text-zinc-300 text-xs font-semibold tracking-[0.2em] uppercase">
-              Senac ADS — Turma 2024
+              Senac ADS — Turma
             </span>
           </div>
 
