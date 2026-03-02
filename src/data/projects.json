@@ -1,0 +1,114 @@
+[
+  {
+    "id": "1",
+    "studentName": "Ana Beatriz Silva",
+    "projectTitle": "SyncFlow API",
+    "description": "Plataforma de integração de APIs REST com painel de monitoramento em tempo real, autenticação JWT e rate limiting automático.",
+    "technologies": ["Python", "FastAPI", "React", "Docker"],
+    "links": {
+      "github": "https://github.com",
+      "linkedin": "https://linkedin.com",
+      "instagram": "https://instagram.com",
+      "projectUrl": "https://exemplo.com.br"
+    },
+    "postedAt": "2024-11-20"
+  },
+  {
+    "id": "2",
+    "studentName": "Carlos Eduardo Mendes",
+    "projectTitle": "EduTrack",
+    "description": "Sistema de gestão acadêmica com dashboard interativo, relatórios em PDF e notificações push para alunos e professores.",
+    "technologies": ["Java", "Spring Boot", "React", "PostgreSQL"],
+    "links": {
+      "github": "https://github.com",
+      "linkedin": "https://linkedin.com",
+      "instagram": "https://instagram.com",
+      "projectUrl": "https://exemplo.com.br"
+    },
+    "postedAt": "2024-12-05"
+  },
+  {
+    "id": "3",
+    "studentName": "Fernanda Rocha Lima",
+    "projectTitle": "CryptoSense",
+    "description": "Dashboard de análise de criptomoedas com machine learning para previsão de tendências e alertas personalizados via WhatsApp.",
+    "technologies": ["Python", "Machine Learning", "API", "Vue.js"],
+    "links": {
+      "github": "https://github.com",
+      "linkedin": "https://linkedin.com",
+      "instagram": null,
+      "projectUrl": "https://exemplo.com.br"
+    },
+    "postedAt": "2024-10-15"
+  },
+  {
+    "id": "4",
+    "studentName": "Gabriel Torres",
+    "projectTitle": "DevBoard",
+    "description": "Kanban board colaborativo em tempo real com WebSockets, drag-and-drop, histórico de atividades e integração com GitHub.",
+    "technologies": ["React", "Node.js", "WebSocket", "MongoDB"],
+    "links": {
+      "github": "https://github.com",
+      "linkedin": "https://linkedin.com",
+      "instagram": "https://instagram.com",
+      "projectUrl": null
+    },
+    "postedAt": "2024-12-18"
+  },
+  {
+    "id": "5",
+    "studentName": "Isabela Martins Costa",
+    "projectTitle": "MedAssist AI",
+    "description": "Aplicativo de triagem médica com IA conversacional, agendamento inteligente e integração com prontuário eletrônico.",
+    "technologies": ["Python", "Machine Learning", "API", "React Native"],
+    "links": {
+      "github": "https://github.com",
+      "linkedin": "https://linkedin.com",
+      "instagram": "https://instagram.com",
+      "projectUrl": "https://exemplo.com.br"
+    },
+    "postedAt": "2024-11-30"
+  },
+  {
+    "id": "6",
+    "studentName": "Lucas Ferreira Alves",
+    "projectTitle": "StockVision",
+    "description": "Sistema de controle de estoque com leitura de QR Code, relatórios automatizados, alertas de reposição e exportação Excel.",
+    "technologies": ["Java", "Angular", "PostgreSQL", "Docker"],
+    "links": {
+      "github": "https://github.com",
+      "linkedin": "https://linkedin.com",
+      "instagram": null,
+      "projectUrl": "https://exemplo.com.br"
+    },
+    "postedAt": "2024-09-22"
+  },
+  {
+    "id": "7",
+    "studentName": "Marina Souza Nunes",
+    "projectTitle": "EventHub",
+    "description": "Plataforma de gerenciamento de eventos com venda de ingressos, QR Code de acesso, mapa interativo e transmissão ao vivo.",
+    "technologies": ["React", "Node.js", "API", "MongoDB"],
+    "links": {
+      "github": "https://github.com",
+      "linkedin": "https://linkedin.com",
+      "instagram": "https://instagram.com",
+      "projectUrl": "https://exemplo.com.br"
+    },
+    "postedAt": "2024-12-01"
+  },
+  {
+    "id": "8",
+    "studentName": "Rafael Nascimento",
+    "projectTitle": "NetPulse",
+    "description": "Ferramenta de monitoramento de redes com detecção de intrusão, visualização de topologia e relatórios de segurança em tempo real.",
+    "technologies": ["Python", "Docker", "API", "Vue.js"],
+    "links": {
+      "github": "https://github.com",
+      "linkedin": "https://linkedin.com",
+      "instagram": "https://instagram.com",
+      "projectUrl": null
+    },
+    "postedAt": "2024-10-30"
+  }
+]
