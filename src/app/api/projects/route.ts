@@ -11,6 +11,12 @@ export async function GET() {
   const parsed = projects.map((p) => ({
     ...p,
     technologies: JSON.parse(p.technologies),
+    links: {
+      github: p.github,
+      linkedin: p.linkedin,
+      instagram: p.instagram,
+      projectUrl: p.projectUrl,
+    },
     postedAt: p.postedAt.toISOString().split("T")[0],
   }));
   return NextResponse.json(parsed);
