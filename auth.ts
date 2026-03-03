@@ -6,6 +6,8 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+const ADMIN_EMAILS = ["christopherdondici@gmail.com"];
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -18,13 +20,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
-  pages: {
-    signIn: "/login",
+  pages: { signIn: "/login" },
+  events: {
+    async createUser({ user }) {
+      if (user.email && ADMIN_EMAILS.includes(user.email)) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { role: "admin" },
+        });
+      }
+    },
   },
   callbacks: {
     session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
+        (session.user as any).role = (user as any).role;
       }
       return session;
     },

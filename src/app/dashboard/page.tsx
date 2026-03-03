@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Plus, X, LogOut, CheckCircle2, Loader2 } from "lucide-react";
+import { Plus, X, LogOut, CheckCircle2, Loader2, Pencil, Trash2 } from "lucide-react";
 
 const TECH_OPTIONS = [
   "Python", "Java", "React", "React Native", "Node.js", "API",
@@ -12,41 +12,94 @@ const TECH_OPTIONS = [
   "TypeScript", "Next.js", "MySQL", "Redis", "GraphQL",
 ];
 
+interface Project {
+  id: string;
+  studentName: string;
+  projectTitle: string;
+  description: string;
+  technologies: string[];
+  github?: string;
+  linkedin?: string;
+  instagram?: string;
+  projectUrl?: string;
+  featured: boolean;
+  postedAt: string;
+  userId: string;
+}
+
+const emptyForm = {
+  studentName: "", projectTitle: "", description: "",
+  github: "", linkedin: "", instagram: "", projectUrl: "",
+};
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [form, setForm] = useState({
-    studentName: "",
-    projectTitle: "",
-    description: "",
-    github: "",
-    linkedin: "",
-    instagram: "",
-    projectUrl: "",
-  });
+  const [myProjects, setMyProjects] = useState<Project[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [form, setForm] = useState(emptyForm);
   const [selectedTechs, setSelectedTechs] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [showForm, setShowForm] = useState(false);
 
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <Loader2 className="text-cyan-400 animate-spin" size={32} />
-      </div>
-    );
-  }
+  const isAdmin = (session?.user as any)?.role === "admin";
 
-  if (status === "unauthenticated") {
-    router.push("/login");
-    return null;
+  useEffect(() => {
+    if (status === "unauthenticated") router.push("/login");
+  }, [status]);
+
+  useEffect(() => {
+    if (status === "authenticated") fetchMyProjects();
+  }, [status]);
+
+  async function fetchMyProjects() {
+    setLoadingProjects(true);
+    const res = await fetch("/api/projects");
+    const all = await res.json();
+    const mine = all.filter((p: Project) => p.userId === session?.user?.id);
+    setMyProjects(mine);
+    setLoadingProjects(false);
   }
 
   function toggleTech(tech: string) {
     setSelectedTechs((prev) =>
       prev.includes(tech) ? prev.filter((t) => t !== tech) : [...prev, tech]
     );
+  }
+
+  function startEdit(project: Project) {
+    setEditingId(project.id);
+    setForm({
+      studentName: project.studentName,
+      projectTitle: project.projectTitle,
+      description: project.description,
+      github: project.github || "",
+      linkedin: project.linkedin || "",
+      instagram: project.instagram || "",
+      projectUrl: project.projectUrl || "",
+    });
+    setSelectedTechs(project.technologies);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setForm(emptyForm);
+    setSelectedTechs([]);
+    setShowForm(false);
+    setError("");
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Tem certeza que deseja deletar este projeto?")) return;
+    const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
+    if (res.ok) fetchMyProjects();
+    else setError("Erro ao deletar projeto.");
   }
 
   async function handleSubmit() {
@@ -58,14 +111,24 @@ export default function DashboardPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/projects", {
-        method: "POST",
+      const url = editingId ? `/api/projects/${editingId}` : "/api/projects";
+      const method = editingId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, technologies: selectedTechs }),
       });
+
       if (!res.ok) throw new Error("Erro ao salvar");
-      setSuccess(true);
-      setTimeout(() => router.push("/"), 2000);
+
+      if (!editingId) {
+        setSuccess(true);
+        setTimeout(() => { setSuccess(false); cancelEdit(); fetchMyProjects(); }, 2000);
+      } else {
+        cancelEdit();
+        fetchMyProjects();
+      }
     } catch {
       setError("Algo deu errado. Tente novamente.");
     } finally {
@@ -73,17 +136,21 @@ export default function DashboardPage() {
     }
   }
 
-  if (success) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="text-center">
-          <CheckCircle2 size={56} className="text-cyan-400 mx-auto mb-4" />
-          <h2 className="text-white text-2xl font-bold mb-2">Projeto publicado!</h2>
-          <p className="text-zinc-400">Redirecionando para o portal...</p>
-        </div>
+  if (status === "loading") return (
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <Loader2 className="text-cyan-400 animate-spin" size={32} />
+    </div>
+  );
+
+  if (success) return (
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="text-center">
+        <CheckCircle2 size={56} className="text-cyan-400 mx-auto mb-4" />
+        <h2 className="text-white text-2xl font-bold mb-2">Projeto publicado!</h2>
+        <p className="text-zinc-400">Atualizando...</p>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -93,108 +160,177 @@ export default function DashboardPage() {
       </div>
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-12">
+
+        {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
             {session?.user?.image && (
               <img src={session.user.image} alt="avatar"
-                   className="w-10 h-10 rounded-full border-2 border-zinc-700" />
+                className="w-10 h-10 rounded-full border-2 border-zinc-700" />
             )}
             <div>
-              <p className="text-white font-semibold text-sm">{session?.user?.name}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-white font-semibold text-sm">{session?.user?.name}</p>
+                {isAdmin && (
+                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-cyan-500/20 border border-cyan-500/40 text-cyan-300">
+                    Admin
+                  </span>
+                )}
+              </div>
               <p className="text-zinc-500 text-xs">{session?.user?.email}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {isAdmin && (
+              <a href="/admin"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/10 transition-all">
+                Painel Admin
+              </a>
+            )}
             <a href="/" className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors">← Portal</a>
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs
-                         text-zinc-400 hover:text-red-400 bg-zinc-900 border border-zinc-800
-                         hover:border-red-500/30 transition-all"
-            >
+            <button onClick={() => signOut({ callbackUrl: "/" })}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-red-400 bg-zinc-900 border border-zinc-800 hover:border-red-500/30 transition-all">
               <LogOut size={13} /> Sair
             </button>
           </div>
         </div>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-black text-white mb-2">Publicar Projeto</h1>
-          <p className="text-zinc-400 text-sm">Preencha as informações do seu projeto.</p>
-        </div>
-
-        <div className="space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Seu nome completo *">
-              <input type="text" placeholder="Ex: Ana Beatriz Silva"
-                value={form.studentName} onChange={(e) => setForm({ ...form, studentName: e.target.value })}
-                className={inputClass} />
-            </Field>
-            <Field label="Título do projeto *">
-              <input type="text" placeholder="Ex: SyncFlow API"
-                value={form.projectTitle} onChange={(e) => setForm({ ...form, projectTitle: e.target.value })}
-                className={inputClass} />
-            </Field>
-          </div>
-
-          <Field label="Descrição do projeto *">
-            <textarea rows={4} placeholder="Descreva o que seu projeto faz..."
-              value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className={inputClass + " resize-none"} />
-          </Field>
-
-          <Field label="Tecnologias usadas *">
-            <div className="flex flex-wrap gap-2 p-3 bg-zinc-900 border border-zinc-800 rounded-xl min-h-[56px]">
-              {TECH_OPTIONS.map((tech) => (
-                <button key={tech} type="button" onClick={() => toggleTech(tech)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-all
-                    ${selectedTechs.includes(tech)
-                      ? "bg-cyan-500/20 border-cyan-500/50 text-cyan-300"
-                      : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500"}`}>
-                  {selectedTechs.includes(tech) && <span className="mr-1">✓</span>}
-                  {tech}
-                </button>
+        {/* Meus projetos */}
+        {!loadingProjects && myProjects.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-white font-bold text-lg mb-4">Meus Projetos</h2>
+            <div className="space-y-3">
+              {myProjects.map((p) => (
+                <div key={p.id} className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
+                  <div>
+                    <p className="text-white font-semibold text-sm">{p.projectTitle}</p>
+                    <p className="text-zinc-500 text-xs mt-0.5">{p.technologies.join(", ")}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => startEdit(p)}
+                      className="p-2 rounded-lg text-zinc-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all">
+                      <Pencil size={14} />
+                    </button>
+                    <button onClick={() => handleDelete(p.id)}
+                      className="p-2 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-all">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
-          </Field>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="GitHub">
-              <input type="url" placeholder="https://github.com/..."
-                value={form.github} onChange={(e) => setForm({ ...form, github: e.target.value })}
-                className={inputClass} />
-            </Field>
-            <Field label="LinkedIn">
-              <input type="url" placeholder="https://linkedin.com/in/..."
-                value={form.linkedin} onChange={(e) => setForm({ ...form, linkedin: e.target.value })}
-                className={inputClass} />
-            </Field>
-            <Field label="Instagram">
-              <input type="url" placeholder="https://instagram.com/..."
-                value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })}
-                className={inputClass} />
-            </Field>
-            <Field label="Link do projeto">
-              <input type="url" placeholder="https://..."
-                value={form.projectUrl} onChange={(e) => setForm({ ...form, projectUrl: e.target.value })}
-                className={inputClass} />
-            </Field>
           </div>
+        )}
 
-          {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
-              <X size={14} className="text-red-400 flex-shrink-0" />
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
-          <button onClick={handleSubmit} disabled={loading}
+        {/* Botão abrir formulário */}
+        {!showForm && (
+          <button onClick={() => setShowForm(true)}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl
-                       bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-sm
-                       transition-all duration-200 disabled:opacity-50
-                       hover:shadow-[0_0_20px_rgba(6,182,212,0.4)]">
-            {loading ? <><Loader2 size={16} className="animate-spin" /> Publicando...</> : <><Plus size={16} /> Publicar projeto</>}
+                       bg-zinc-900 border border-zinc-800 hover:border-cyan-500/40
+                       text-zinc-400 hover:text-cyan-400 font-semibold text-sm
+                       transition-all duration-200 mb-8">
+            <Plus size={16} /> Publicar novo projeto
           </button>
-        </div>
+        )}
+
+        {/* Formulário */}
+        {showForm && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-black text-white">
+                {editingId ? "Editar Projeto" : "Publicar Projeto"}
+              </h1>
+              {editingId && (
+                <button onClick={cancelEdit} className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
+                  Cancelar
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Seu nome completo *">
+                  <input type="text" placeholder="Ex: Ana Beatriz Silva"
+                    value={form.studentName} onChange={(e) => setForm({ ...form, studentName: e.target.value })}
+                    className={inputClass} />
+                </Field>
+                <Field label="Título do projeto *">
+                  <input type="text" placeholder="Ex: SyncFlow API"
+                    value={form.projectTitle} onChange={(e) => setForm({ ...form, projectTitle: e.target.value })}
+                    className={inputClass} />
+                </Field>
+              </div>
+
+              <Field label="Descrição *">
+                <textarea rows={4} placeholder="Descreva o que seu projeto faz..."
+                  value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  className={inputClass + " resize-none"} />
+              </Field>
+
+              <Field label="Tecnologias *">
+                <div className="flex flex-wrap gap-2 p-3 bg-zinc-900 border border-zinc-800 rounded-xl min-h-[56px]">
+                  {TECH_OPTIONS.map((tech) => (
+                    <button key={tech} type="button" onClick={() => toggleTech(tech)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-all
+                        ${selectedTechs.includes(tech)
+                          ? "bg-cyan-500/20 border-cyan-500/50 text-cyan-300"
+                          : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500"}`}>
+                      {selectedTechs.includes(tech) && <span className="mr-1">✓</span>}
+                      {tech}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="GitHub">
+                  <input type="url" placeholder="https://github.com/..."
+                    value={form.github} onChange={(e) => setForm({ ...form, github: e.target.value })}
+                    className={inputClass} />
+                </Field>
+                <Field label="LinkedIn">
+                  <input type="url" placeholder="https://linkedin.com/in/..."
+                    value={form.linkedin} onChange={(e) => setForm({ ...form, linkedin: e.target.value })}
+                    className={inputClass} />
+                </Field>
+                <Field label="Instagram">
+                  <input type="url" placeholder="https://instagram.com/..."
+                    value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })}
+                    className={inputClass} />
+                </Field>
+                <Field label="Link do projeto">
+                  <input type="url" placeholder="https://..."
+                    value={form.projectUrl} onChange={(e) => setForm({ ...form, projectUrl: e.target.value })}
+                    className={inputClass} />
+                </Field>
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+                  <X size={14} className="text-red-400 flex-shrink-0" />
+                  <p className="text-red-400 text-sm">{error}</p>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button onClick={handleSubmit} disabled={loading}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl
+                             bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-sm
+                             transition-all disabled:opacity-50 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+                  {loading
+                    ? <><Loader2 size={16} className="animate-spin" /> Salvando...</>
+                    : <><Plus size={16} /> {editingId ? "Salvar alterações" : "Publicar projeto"}</>}
+                </button>
+                {editingId && (
+                  <button onClick={cancelEdit}
+                    className="px-6 py-3 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white font-semibold text-sm transition-all">
+                    Cancelar
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

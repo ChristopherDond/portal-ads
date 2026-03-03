@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,8 +6,6 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-// ─── NextAuth models (obrigatórios) ───────────────────────────────────────────
 
 model Account {
   id                String  @id @default(cuid())
@@ -45,6 +40,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  role          String    @default("user")
   accounts      Account[]
   sessions      Session[]
   projects      Project[]
@@ -58,18 +54,17 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// ─── Modelo de Projeto ─────────────────────────────────────────────────────────
-
 model Project {
   id           String   @id @default(cuid())
   studentName  String
   projectTitle String
   description  String
-  technologies String   // JSON array armazenado como string
+  technologies String
   github       String?
   linkedin     String?
   instagram    String?
   projectUrl   String?
+  featured     Boolean  @default(false)
   postedAt     DateTime @default(now())
 
   userId String
