@@ -12,7 +12,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const project = await prisma.project.findUnique({ where: { id } });
   if (!project) return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
 
-  const isAdmin = (session.user as any).role === "admin";
+  const isAdmin = (session.user as { role?: string }).role === "admin";
   if (project.userId !== session.user.id && !isAdmin)
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
 
@@ -42,7 +42,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const project = await prisma.project.findUnique({ where: { id } });
   if (!project) return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
 
-  const isAdmin = (session.user as any).role === "admin";
+  const isAdmin = (session.user as { role?: string }).role === "admin";
   if (project.userId !== session.user.id && !isAdmin)
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
 
