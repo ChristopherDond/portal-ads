@@ -1,0 +1,33 @@
+name: CI - Portal ADS
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar Dependências
+        run: npm install
+
+      - name: Gerar Cliente Prisma
+        run: npx prisma generate
+
+      - name: Rodar Lint (ESLint + TS)
+        run: npm run lint
+
+      - name: Verificar Build (Next.js)
+        run: npm run build
