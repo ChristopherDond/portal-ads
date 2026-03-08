@@ -4,9 +4,13 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+interface SessionUserWithRole {
+  role?: string;
+}
+
 export async function GET() {
   const session = await auth();
-  if ((session?.user as any)?.role !== "admin")
+  if ((session?.user as SessionUserWithRole)?.role !== "admin")
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
 
   const users = await prisma.user.findMany({

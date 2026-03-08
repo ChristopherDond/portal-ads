@@ -8,6 +8,11 @@ const prisma = new PrismaClient();
 
 const ADMIN_EMAILS = ["christopherdondici@gmail.com"];
 
+interface UserWithRole {
+  id: string;
+  role?: string;
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -35,7 +40,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
-        (session.user as any).role = (user as any).role;
+        (session.user as UserWithRole).role = (user as UserWithRole).role;
       }
       return session;
     },

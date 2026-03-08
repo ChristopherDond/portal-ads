@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { Loader2, Trash2, Star, StarOff, Users, LayoutGrid } from "lucide-react";
 
 interface Project {
@@ -24,6 +26,10 @@ interface User {
   projects: { id: string }[];
 }
 
+interface SessionUserWithRole {
+  role?: string;
+}
+
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -33,29 +39,29 @@ export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const isAdmin = (session?.user as any)?.role === "admin";
+  const isAdmin = (session?.user as SessionUserWithRole)?.role === "admin";
 
-  useEffect(() => {
-    if (status === "unauthenticated") router.push("/login");
-    if (status === "authenticated" && !isAdmin) router.push("/");
-  }, [status, isAdmin]);
-
-  useEffect(() => {
-    if (isAdmin) { fetchProjects(); fetchUsers(); }
-  }, [isAdmin]);
-
-  async function fetchProjects() {
+  const fetchProjects = useCallback(async () => {
     const res = await fetch("/api/projects");
     const data = await res.json();
     setProjects(data);
     setLoading(false);
-  }
+  }, []);
 
-  async function fetchUsers() {
+  const fetchUsers = useCallback(async () => {
     const res = await fetch("/api/admin/users");
     const data = await res.json();
     setUsers(data);
-  }
+  }, []);
+
+  useEffect(() => {
+    if (status === "unauthenticated") router.push("/login");
+    if (status === "authenticated" && !isAdmin) router.push("/");
+  }, [status, isAdmin, router]);
+
+  useEffect(() => {
+    if (isAdmin) { fetchProjects(); fetchUsers(); }
+  }, [isAdmin, fetchProjects, fetchUsers]);
 
   async function handleDelete(id: string) {
     if (!confirm("Deletar este projeto?")) return;
@@ -101,9 +107,9 @@ export default function AdminPage() {
             </div>
             <h1 className="text-3xl font-black text-white">Painel de Controle</h1>
           </div>
-          <a href="/" className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
+          <Link href="/" className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
             ← Portal
-          </a>
+          </Link>
         </div>
 
         {/* Stats */}
@@ -185,7 +191,7 @@ export default function AdminPage() {
                 className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
                 <div className="flex items-center gap-3">
                   {u.image && (
-                    <img src={u.image} alt={u.name}
+                    <Image src={u.image} alt={u.name} width={36} height={36}
                       className="w-9 h-9 rounded-full border border-zinc-700" />
                   )}
                   <div>

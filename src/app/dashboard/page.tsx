@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { Plus, X, LogOut, CheckCircle2, Loader2, Pencil, Trash2 } from "lucide-react";
 
 const TECH_OPTIONS = [
@@ -27,6 +29,10 @@ interface Project {
   userId: string;
 }
 
+interface SessionUserWithRole {
+  role?: string;
+}
+
 const emptyForm = {
   studentName: "", projectTitle: "", description: "",
   github: "", linkedin: "", instagram: "", projectUrl: "",
@@ -46,24 +52,24 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
 
-  const isAdmin = (session?.user as any)?.role === "admin";
+  const isAdmin = (session?.user as SessionUserWithRole)?.role === "admin";
 
-  useEffect(() => {
-    if (status === "unauthenticated") router.push("/login");
-  }, [status]);
-
-  useEffect(() => {
-    if (status === "authenticated") fetchMyProjects();
-  }, [status]);
-
-  async function fetchMyProjects() {
+  const fetchMyProjects = useCallback(async () => {
     setLoadingProjects(true);
     const res = await fetch("/api/projects");
     const all = await res.json();
     const mine = all.filter((p: Project) => p.userId === session?.user?.id);
     setMyProjects(mine);
     setLoadingProjects(false);
-  }
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    if (status === "unauthenticated") router.push("/login");
+  }, [status, router]);
+
+  useEffect(() => {
+    if (status === "authenticated") fetchMyProjects();
+  }, [status, fetchMyProjects]);
 
   function toggleTech(tech: string) {
     setSelectedTechs((prev) =>
@@ -165,7 +171,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
             {session?.user?.image && (
-              <img src={session.user.image} alt="avatar"
+              <Image src={session.user.image} alt="avatar" width={40} height={40}
                 className="w-10 h-10 rounded-full border-2 border-zinc-700" />
             )}
             <div>
@@ -182,12 +188,12 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-3">
             {isAdmin && (
-              <a href="/admin"
+              <Link href="/admin"
                 className="px-3 py-1.5 rounded-lg text-xs font-medium text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/10 transition-all">
                 Painel Admin
-              </a>
+              </Link>
             )}
-            <a href="/" className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors">← Portal</a>
+            <Link href="/" className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors">← Portal</Link>
             <button onClick={() => signOut({ callbackUrl: "/" })}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-red-400 bg-zinc-900 border border-zinc-800 hover:border-red-500/30 transition-all">
               <LogOut size={13} /> Sair

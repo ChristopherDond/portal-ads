@@ -4,42 +4,52 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function GET() {
-  const projects = await prisma.project.findMany({
-    orderBy: [{ featured: "desc" }, { postedAt: "desc" }],
-  });
-  const parsed = projects.map((p) => ({
-    ...p,
-    technologies: JSON.parse(p.technologies),
-    links: {
-      github: p.github,
-      linkedin: p.linkedin,
-      instagram: p.instagram,
-      projectUrl: p.projectUrl,
-    },
-    postedAt: p.postedAt.toISOString().split("T")[0],
-  }));
-  return NextResponse.json(parsed);
+interface SessionUserWithRole {
+  role?: string;
 }
 
-export async function POST(req: NextRequest) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
+  const project = await prisma.project.findUnique({ where: { id } });
+  if (!project) return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
+
+  const isAdmin = (session.user as SessionUserWithRole).role === "admin";
+  if (project.userId !== session.user.id && !isAdmin)
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+
   const body = await req.json();
-  const { studentName, projectTitle, description, technologies, github, linkedin, instagram, projectUrl } = body;
-
-  if (!studentName || !projectTitle || !description || !technologies?.length)
-    return NextResponse.json({ error: "Campos obrigatórios faltando" }, { status: 400 });
-
-  const project = await prisma.project.create({
+  const updated = await prisma.project.update({
+    where: { id },
     data: {
-      studentName, projectTitle, description,
-      technologies: JSON.stringify(technologies),
-      github: github || null, linkedin: linkedin || null,
-      instagram: instagram || null, projectUrl: projectUrl || null,
-      userId: session.user.id,
+      studentName: body.studentName,
+      projectTitle: body.projectTitle,
+      description: body.description,
+      technologies: JSON.stringify(body.technologies),
+      github: body.github || null,
+      linkedin: body.linkedin || null,
+      instagram: body.instagram || null,
+      projectUrl: body.projectUrl || null,
+      ...(isAdmin && { featured: body.featured }),
     },
   });
-  return NextResponse.json(project, { status: 201 });
+  return NextResponse.json(updated);
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+
+  const project = await prisma.project.findUnique({ where: { id } });
+  if (!project) return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
+
+  const isAdmin = (session.user as SessionUserWithRole).role === "admin";
+  if (project.userId !== session.user.id && !isAdmin)
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+
+  await prisma.project.delete({ where: { id } });
+  return NextResponse.json({ success: true });
 }
