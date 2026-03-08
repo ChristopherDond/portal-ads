@@ -8,12 +8,10 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-// --- ATUALIZAR (PUT) ---
 export async function PUT(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
   const session = await auth();
 
-  // Verificação de autenticação
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
