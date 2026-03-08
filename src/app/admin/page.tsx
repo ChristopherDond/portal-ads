@@ -60,7 +60,14 @@ export default function AdminPage() {
   }, [status, isAdmin, router]);
 
   useEffect(() => {
-    if (isAdmin) { fetchProjects(); fetchUsers(); }
+  const loadData = async () => {
+    if (isAdmin) {
+      await fetchProjects();
+      await fetchUsers();
+    }
+  };
+
+  loadData();
   }, [isAdmin, fetchProjects, fetchUsers]);
 
   async function handleDelete(id: string) {
