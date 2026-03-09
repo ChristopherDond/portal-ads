@@ -19,7 +19,21 @@ export default function HomePage() {
   useEffect(() => {
     fetch("/api/projects")
       .then((r) => r.json())
-      .then((data) => { setProjects(Array.isArray(data) ? data.filter(Boolean) : []); setLoading(false); })
+      .then((data) => {
+        const mapped = Array.isArray(data)
+          ? data.filter(Boolean).map((p) => ({
+              ...p,
+              links: {
+                github:     p.github     ?? null,
+                linkedin:   p.linkedin   ?? null,
+                instagram:  p.instagram  ?? null,
+                projectUrl: p.projectUrl ?? null,
+              },
+            }))
+          : [];
+        setProjects(mapped);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
 
