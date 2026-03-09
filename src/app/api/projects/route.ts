@@ -4,6 +4,14 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+function parseTechnologies(value: unknown): string[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try { return JSON.parse(value); } catch { return []; }
+  }
+  return [];
+}
+
 export async function GET() {
   const projects = await prisma.project.findMany({
     orderBy: { postedAt: "desc" },
@@ -12,7 +20,7 @@ export async function GET() {
   return NextResponse.json(
     projects.map((p) => ({
       ...p,
-      technologies: JSON.parse(p.technologies as string),
+      technologies: parseTechnologies(p.technologies),
     }))
   );
 }
@@ -43,6 +51,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     ...project,
-    technologies: JSON.parse(project.technologies as string),
+    technologies: parseTechnologies(project.technologies),
   });
 }

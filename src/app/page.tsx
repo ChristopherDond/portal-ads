@@ -19,7 +19,7 @@ export default function HomePage() {
   useEffect(() => {
     fetch("/api/projects")
       .then((r) => r.json())
-      .then((data) => { setProjects(data); setLoading(false); })
+      .then((data) => { setProjects(Array.isArray(data) ? data.filter(Boolean) : []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
