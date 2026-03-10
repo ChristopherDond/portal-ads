@@ -28,6 +28,8 @@ export default function HomePage() {
                 linkedin:   p.linkedin   ?? null,
                 instagram:  p.instagram  ?? null,
                 projectUrl: p.projectUrl ?? null,
+                email:      p.email      ?? null,
+                whatsapp:   p.whatsapp   ?? null,
               },
             }))
           : [];

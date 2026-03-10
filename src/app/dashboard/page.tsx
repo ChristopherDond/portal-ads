@@ -24,6 +24,8 @@ interface Project {
   linkedin?: string;
   instagram?: string;
   projectUrl?: string;
+  email?: string;
+  whatsapp?: string;
   featured: boolean;
   postedAt: string;
   userId: string;
@@ -36,6 +38,7 @@ interface SessionUserWithRole {
 const emptyForm = {
   studentName: "", projectTitle: "", description: "",
   github: "", linkedin: "", instagram: "", projectUrl: "",
+  email: "", whatsapp: "",
 };
 
 export default function DashboardPage() {
@@ -87,6 +90,8 @@ export default function DashboardPage() {
       linkedin: project.linkedin || "",
       instagram: project.instagram || "",
       projectUrl: project.projectUrl || "",
+      email: project.email || "",
+      whatsapp: project.whatsapp || "",
     });
     setSelectedTechs(project.technologies);
     setShowForm(true);
@@ -288,6 +293,7 @@ export default function DashboardPage() {
                 </div>
               </Field>
 
+              {/* Links sociais */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="GitHub">
                   <input type="url" placeholder="https://github.com/..."
@@ -309,6 +315,25 @@ export default function DashboardPage() {
                     value={form.projectUrl} onChange={(e) => setForm({ ...form, projectUrl: e.target.value })}
                     className={inputClass} />
                 </Field>
+              </div>
+
+              {/* Contatos */}
+              <div className="pt-1">
+                <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-3">
+                  Contato (opcional)
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Field label="E-mail">
+                    <input type="email" placeholder="seu@email.com"
+                      value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      className={inputClass} />
+                  </Field>
+                  <Field label="WhatsApp">
+                    <input type="tel" placeholder="+55 11 99999-9999"
+                      value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+                      className={inputClass} />
+                  </Field>
+                </div>
               </div>
 
               {error && (

@@ -40,6 +40,8 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       linkedin: body.linkedin || null,
       instagram: body.instagram || null,
       projectUrl: body.projectUrl || null,
+      email: body.email || null,
+      whatsapp: body.whatsapp || null,
       ...(isAdmin && { featured: body.featured }),
     },
   });

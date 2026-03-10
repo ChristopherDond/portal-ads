@@ -64,6 +64,8 @@ model Project {
   linkedin     String?
   instagram    String?
   projectUrl   String?
+  email        String?
+  whatsapp     String?
   featured     Boolean  @default(false)
   postedAt     DateTime @default(now())
 

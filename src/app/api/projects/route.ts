@@ -45,6 +45,8 @@ export async function POST(req: NextRequest) {
       linkedin: body.linkedin || null,
       instagram: body.instagram || null,
       projectUrl: body.projectUrl || null,
+      email: body.email || null,
+      whatsapp: body.whatsapp || null,
       userId: session.user.id,
     },
   });
