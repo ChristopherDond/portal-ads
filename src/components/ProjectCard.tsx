@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   Github, Linkedin, Instagram, ExternalLink,
   Calendar, X, Code2, Mail, Phone
@@ -14,6 +15,7 @@ export interface Project {
   projectTitle: string;
   description: string;
   technologies: string[];
+  userImage?: string | null;
   links: {
     github?: string | null;
     linkedin?: string | null;
@@ -53,7 +55,9 @@ const TECH_COLORS: Record<string, string> = {
 const DEFAULT_TECH_COLOR = "bg-zinc-800 text-zinc-300 border-zinc-600";
 
 function formatDate(iso: string): string {
-  return new Date(iso + "T00:00:00").toLocaleDateString("pt-BR", {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("pt-BR", {
     day: "2-digit", month: "short", year: "numeric",
   });
 }
@@ -70,7 +74,7 @@ function formatWhatsapp(raw: string): string {
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
 function ProjectModal({ project, onClose }: { project: Project; onClose: () => void }) {
-  const { studentName, projectTitle, description, technologies, links, postedAt } = project;
+  const { studentName, projectTitle, description, technologies, links, postedAt, userImage } = project;
 
   const whatsappUrl = links.whatsapp
     ? `https://wa.me/${formatWhatsapp(links.whatsapp)}`
@@ -89,9 +93,16 @@ function ProjectModal({ project, onClose }: { project: Project; onClose: () => v
 
         <div className="flex items-start justify-between p-6 pb-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-600 to-indigo-700
-                            flex items-center justify-center text-white font-bold text-lg shadow-lg">
-              {getInitials(studentName)}
+            <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-lg flex-shrink-0">
+              {userImage ? (
+                <Image src={userImage} alt={studentName} width={56} height={56}
+                  className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-cyan-600 to-indigo-700
+                                flex items-center justify-center text-white font-bold text-lg">
+                  {getInitials(studentName)}
+                </div>
+              )}
             </div>
             <div>
               <p className="text-white font-bold text-lg leading-tight">{studentName}</p>
@@ -199,7 +210,7 @@ function LinkButton({ href, icon, label }: { href: string; icon: React.ReactNode
 
 export default function ProjectCard({ project, index = 0 }: ProjectCardProps) {
   const [modalOpen, setModalOpen] = useState(false);
-  const { studentName, projectTitle, description, technologies, links, postedAt } = project;
+  const { studentName, projectTitle, description, technologies, links, postedAt, userImage } = project;
 
   const whatsappUrl = links.whatsapp
     ? `https://wa.me/${formatWhatsapp(links.whatsapp)}`
@@ -220,9 +231,16 @@ export default function ProjectCard({ project, index = 0 }: ProjectCardProps) {
 
         {/* Header */}
         <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-zinc-800">
-          <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-600 to-indigo-700
-                          flex items-center justify-center text-white font-bold text-sm tracking-wider shadow-md">
-            {getInitials(studentName)}
+          <div className="flex-shrink-0 w-11 h-11 rounded-xl overflow-hidden shadow-md">
+            {userImage ? (
+              <Image src={userImage} alt={studentName} width={44} height={44}
+                className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-cyan-600 to-indigo-700
+                              flex items-center justify-center text-white font-bold text-sm tracking-wider">
+                {getInitials(studentName)}
+              </div>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white font-semibold text-sm leading-snug break-words">{studentName}</p>

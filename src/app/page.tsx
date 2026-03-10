@@ -31,6 +31,7 @@ export default function HomePage() {
                 email:      p.email      ?? null,
                 whatsapp:   p.whatsapp   ?? null,
               },
+              userImage: p.userImage ?? null,
             }))
           : [];
         setProjects(mapped);

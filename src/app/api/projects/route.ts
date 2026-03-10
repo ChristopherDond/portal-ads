@@ -15,11 +15,13 @@ function parseTechnologies(value: unknown): string[] {
 export async function GET() {
   const projects = await prisma.project.findMany({
     orderBy: { postedAt: "desc" },
+    include: { user: { select: { image: true } } },
   });
 
   return NextResponse.json(
     projects.map((p) => ({
       ...p,
+      userImage: p.user?.image ?? null,
       technologies: parseTechnologies(p.technologies),
     }))
   );
