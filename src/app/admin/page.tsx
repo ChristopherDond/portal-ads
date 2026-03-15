@@ -105,7 +105,6 @@ export default function AdminPage() {
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-12">
 
-        {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-2
@@ -119,7 +118,6 @@ export default function AdminPage() {
           </Link>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-2">
@@ -137,7 +135,6 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-2 mb-6">
           <button onClick={() => setTab("projects")}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all
@@ -155,7 +152,6 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* Lista de projetos */}
         {tab === "projects" && (
           <div className="space-y-3">
             {projects.map((p) => (
@@ -190,7 +186,6 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Lista de usuários */}
         {tab === "users" && (
           <div className="space-y-3">
             {users.map((u) => (

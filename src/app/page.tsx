@@ -15,7 +15,6 @@ export default function HomePage() {
   const [techFilter, setTechFilter] = useState<string>("all");
   const [sortMode, setSortMode]     = useState<SortMode>("date-desc");
 
-  // Carrega projetos da API
   useEffect(() => {
     fetch("/api/projects")
       .then((r) => r.json())
@@ -77,7 +76,6 @@ export default function HomePage() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* ── Hero ── */}
         <header className="py-20 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8
                           bg-zinc-900 border border-zinc-700 rounded-full">
@@ -104,14 +102,12 @@ export default function HomePage() {
             <span className="text-zinc-200">Análise e Desenvolvimento de Sistemas</span>.
           </p>
 
-          {/* Stats */}
           <div className="flex items-center justify-center gap-8 mt-10">
             <Stat value={projects.length} label="Projetos" icon={<LayoutGrid size={15} />} />
             <div className="w-px h-8 bg-zinc-800" />
             <Stat value={allTechnologies.length} label="Tecnologias" icon={<Layers size={15} />} />
           </div>
 
-          {/* Botão publicar / login */}
           <div className="mt-8">
             {session ? (
               <a href="/dashboard"
@@ -133,7 +129,6 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* ── Filtros ── */}
         <div className="mb-10 space-y-4">
           <div className="flex gap-3">
             <div className="relative flex-1">
@@ -170,7 +165,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Pills de tecnologia */}
           {allTechnologies.length > 0 && (
             <div className="flex flex-wrap gap-2 items-center">
               <span className="text-zinc-500 text-xs uppercase tracking-wider font-semibold mr-1">Tech:</span>
@@ -197,7 +191,6 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* ── Cards ── */}
         {loading ? (
           <div className="flex justify-center py-24">
             <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />

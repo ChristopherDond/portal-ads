@@ -172,7 +172,6 @@ export default function DashboardPage() {
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-12">
 
-        {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
             {session?.user?.image && (
@@ -206,7 +205,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Meus projetos */}
         {!loadingProjects && myProjects.length > 0 && (
           <div className="mb-10">
             <h2 className="text-white font-bold text-lg mb-4">Meus Projetos</h2>
@@ -233,7 +231,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Botão abrir formulário */}
         {!showForm && (
           <button onClick={() => setShowForm(true)}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl
@@ -244,7 +241,6 @@ export default function DashboardPage() {
           </button>
         )}
 
-        {/* Formulário */}
         {showForm && (
           <div>
             <div className="flex items-center justify-between mb-6">
@@ -293,7 +289,6 @@ export default function DashboardPage() {
                 </div>
               </Field>
 
-              {/* Links sociais */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="GitHub">
                   <input type="url" placeholder="https://github.com/..."
@@ -317,7 +312,6 @@ export default function DashboardPage() {
                 </Field>
               </div>
 
-              {/* Contatos */}
               <div className="pt-1">
                 <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-3">
                   Contato (opcional)
