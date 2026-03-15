@@ -29,15 +29,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   pages: { signIn: "/login" },
   events: {
-    async createUser({ user }) {
-      if (user.email && ADMIN_EMAILS.includes(user.email)) {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { role: "admin" },
-        });
-      }
-    },
+  async createUser({ user }) {
+    if (user.email && ADMIN_EMAILS.includes(user.email)) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { role: "admin" },
+      });
+    }
   },
+  async signIn({ user }) {
+    if (user.id && user.image) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { image: user.image },
+      });
+    }
+  },
+},
   callbacks: {
     session({ session, user }) {
       if (session.user) {
