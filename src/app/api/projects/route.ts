@@ -32,6 +32,22 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id)
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
+  // Verifica se o usuário está banido
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { banned: true },
+  });
+
+  if (dbUser?.banned) {
+    return NextResponse.json(
+      {
+        error: "Sua conta foi suspensa pelo administrador. Entre em contato para mais informações.",
+        code: "ACCOUNT_SUSPENDED",
+      },
+      { status: 403 }
+    );
+  }
+
   const body = await req.json();
 
   if (!body.studentName || !body.projectTitle || !body.description || !body.technologies?.length)

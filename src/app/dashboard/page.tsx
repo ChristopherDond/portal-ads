@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, X, LogOut, CheckCircle2, Loader2, Pencil, Trash2 } from "lucide-react";
+import { Plus, X, LogOut, CheckCircle2, Loader2, Pencil, Trash2, ShieldBan } from "lucide-react";
 
 const TECH_OPTIONS = [
   "Python", "Java", "React", "React Native", "Node.js", "API",
@@ -54,6 +54,7 @@ export default function DashboardPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [isBanned, setIsBanned] = useState(false);
 
   const isAdmin = (session?.user as SessionUserWithRole)?.role === "admin";
 
@@ -131,7 +132,16 @@ export default function DashboardPage() {
         body: JSON.stringify({ ...form, technologies: selectedTechs }),
       });
 
-      if (!res.ok) throw new Error("Erro ao salvar");
+      if (!res.ok) {
+        const data = await res.json();
+        // Detecta conta suspensa
+        if (data?.code === "ACCOUNT_SUSPENDED") {
+          setIsBanned(true);
+          setShowForm(false);
+          return;
+        }
+        throw new Error(data?.error || "Erro ao salvar");
+      }
 
       if (!editingId) {
         setSuccess(true);
@@ -140,8 +150,8 @@ export default function DashboardPage() {
         cancelEdit();
         fetchMyProjects();
       }
-    } catch {
-      setError("Algo deu errado. Tente novamente.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Algo deu errado. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -172,6 +182,7 @@ export default function DashboardPage() {
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-12">
 
+        {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
             {session?.user?.image && (
@@ -205,6 +216,21 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Banner de conta suspensa */}
+        {isBanned && (
+          <div className="flex items-start gap-3 p-4 mb-8 bg-red-500/10 border border-red-500/30 rounded-xl">
+            <ShieldBan size={18} className="text-red-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-red-300 font-semibold text-sm">Conta suspensa</p>
+              <p className="text-red-400/70 text-xs mt-0.5">
+                Sua conta foi suspensa pelo administrador. Você pode visualizar seus projetos existentes,
+                mas não pode publicar novos. Entre em contato com o admin para mais informações.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Meus projetos */}
         {!loadingProjects && myProjects.length > 0 && (
           <div className="mb-10">
             <h2 className="text-white font-bold text-lg mb-4">Meus Projetos</h2>
@@ -231,7 +257,8 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {!showForm && (
+        {/* Botão abrir formulário — oculto se suspenso */}
+        {!showForm && !isBanned && (
           <button onClick={() => setShowForm(true)}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl
                        bg-zinc-900 border border-zinc-800 hover:border-cyan-500/40
@@ -241,7 +268,8 @@ export default function DashboardPage() {
           </button>
         )}
 
-        {showForm && (
+        {/* Formulário */}
+        {showForm && !isBanned && (
           <div>
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-black text-white">
@@ -289,6 +317,7 @@ export default function DashboardPage() {
                 </div>
               </Field>
 
+              {/* Links sociais */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="GitHub">
                   <input type="url" placeholder="https://github.com/..."
@@ -312,6 +341,7 @@ export default function DashboardPage() {
                 </Field>
               </div>
 
+              {/* Contatos */}
               <div className="pt-1">
                 <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-3">
                   Contato (opcional)
