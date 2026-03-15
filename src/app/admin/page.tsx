@@ -8,6 +8,7 @@ import Image from "next/image";
 import {
   Loader2, Trash2, Star, StarOff, Users, LayoutGrid,
   ShieldBan, ShieldCheck, ShieldPlus, ShieldMinus, UserX,
+  KeyRound, CheckCircle2, X,
 } from "lucide-react";
 
 interface Project {
@@ -249,10 +250,15 @@ export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [tab, setTab] = useState<"projects" | "users">("projects");
+  const [tab, setTab] = useState<"projects" | "users" | "settings">("projects");
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [accessCode, setAccessCode] = useState("");
+  const [newCode, setNewCode] = useState("");
+  const [codeLoading, setCodeLoading] = useState(false);
+  const [codeSuccess, setCodeSuccess] = useState(false);
+  const [codeError, setCodeError] = useState("");
 
   const sessionUser = session?.user as SessionUserWithRole;
   const isAdmin = sessionUser?.role === "admin";
@@ -270,6 +276,12 @@ export default function AdminPage() {
     setUsers(Array.isArray(data) ? data : []);
   }, []);
 
+  const fetchSettings = useCallback(async () => {
+    const res = await fetch("/api/admin/settings");
+    const data = await res.json();
+    setAccessCode(data.code ?? "");
+  }, []);
+
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
     if (status === "authenticated" && !isAdmin) router.push("/");
@@ -280,10 +292,34 @@ export default function AdminPage() {
       if (isAdmin) {
         await fetchProjects();
         await fetchUsers();
+        await fetchSettings();
       }
     };
     loadData();
-  }, [isAdmin, fetchProjects, fetchUsers]);
+  }, [isAdmin, fetchProjects, fetchUsers, fetchSettings]);
+
+  async function handleCodeChange() {
+    if (!newCode.trim()) return;
+    setCodeLoading(true);
+    setCodeError("");
+    setCodeSuccess(false);
+    const res = await fetch("/api/admin/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: newCode }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setAccessCode(data.code);
+      setNewCode("");
+      setCodeSuccess(true);
+      setTimeout(() => setCodeSuccess(false), 3000);
+    } else {
+      const data = await res.json();
+      setCodeError(data.error ?? "Erro ao atualizar código.");
+    }
+    setCodeLoading(false);
+  }
 
   async function handleDeleteProject(id: string) {
     if (!confirm("Deletar este projeto?")) return;
@@ -373,7 +409,7 @@ export default function AdminPage() {
         </div>
 
         <div className="flex gap-2 mb-6">
-          {(["projects", "users"] as const).map((t) => (
+          {(["projects", "users", "settings"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -383,7 +419,7 @@ export default function AdminPage() {
                   : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200"
               }`}
             >
-              {t === "projects" ? "Projetos" : "Usuários"}
+              {t === "projects" ? "Projetos" : t === "users" ? "Usuários" : "Configurações"}
             </button>
           ))}
         </div>
@@ -438,7 +474,7 @@ export default function AdminPage() {
 
         {tab === "users" && (
           <div className="space-y-3">
-
+            {/* Legenda das ações */}
             <div className="flex flex-wrap gap-3 px-1 mb-2 text-xs text-zinc-600">
               <span className="flex items-center gap-1.5"><ShieldBan size={12} className="text-amber-400" /> Suspender</span>
               <span className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-emerald-400" /> Reativar</span>
@@ -458,6 +494,63 @@ export default function AdminPage() {
                 onAction={handleUserAction}
               />
             ))}
+          </div>
+        )}
+
+        {tab === "settings" && (
+          <div className="space-y-6">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+              <div className="flex items-center gap-3 mb-1">
+                <KeyRound size={18} className="text-cyan-400" />
+                <h2 className="text-white font-bold text-base">Código de Acesso</h2>
+              </div>
+              <p className="text-zinc-500 text-sm mb-5">
+                Somente quem tiver esse código consegue fazer login no portal.
+                Ao trocar, cookies antigos são invalidados automaticamente.
+              </p>
+
+              <div className="mb-4 p-3 bg-zinc-950 border border-zinc-700 rounded-xl flex items-center justify-between">
+                <span className="text-zinc-400 text-xs uppercase tracking-wider">Código atual</span>
+                <span className="text-cyan-300 font-mono font-bold tracking-widest text-sm">
+                  {accessCode || "—"}
+                </span>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Novo código (ex: TURMA2027)"
+                  value={newCode}
+                  onChange={(e) => setNewCode(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => e.key === "Enter" && handleCodeChange()}
+                  className="flex-1 px-3 py-2.5 bg-zinc-950 border border-zinc-700 rounded-xl
+                             text-white text-sm font-mono tracking-widest placeholder-zinc-600
+                             focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/20
+                             transition-all"
+                />
+                <button
+                  onClick={handleCodeChange}
+                  disabled={codeLoading || !newCode.trim()}
+                  className="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-zinc-950
+                             font-bold text-sm transition-all disabled:opacity-50 flex items-center gap-2"
+                >
+                  {codeLoading ? <Loader2 size={15} className="animate-spin" /> : "Trocar"}
+                </button>
+              </div>
+
+              {codeSuccess && (
+                <div className="flex items-center gap-2 mt-3 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                  <CheckCircle2 size={14} className="text-emerald-400" />
+                  <p className="text-emerald-400 text-xs">Código atualizado! Usuários sem cookie válido precisarão inserir o novo código.</p>
+                </div>
+              )}
+              {codeError && (
+                <div className="flex items-center gap-2 mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+                  <X size={14} className="text-red-400" />
+                  <p className="text-red-400 text-xs">{codeError}</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

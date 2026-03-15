@@ -55,6 +55,13 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// Configurações globais do portal (chave/valor)
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
 model Project {
   id           String   @id @default(cuid())
   studentName  String
